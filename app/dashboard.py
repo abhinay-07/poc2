@@ -13,7 +13,7 @@ import plotly.graph_objects as go
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
-DB_HOST = os.getenv("POSTGRES_HOST", "postgres")
+DB_HOST = os.getenv("POSTGRES_HOST", "localhost")
 DB_PORT = os.getenv("POSTGRES_PORT", "5432")
 DB_NAME = os.getenv("POSTGRES_DB", "kyc_db")
 DB_USER = os.getenv("POSTGRES_USER", "kyc_user")

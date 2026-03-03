@@ -12,13 +12,14 @@ from datetime import datetime
 # ---------------------------------------------------------------------------
 # Configuration
 # ---------------------------------------------------------------------------
-DB_HOST = os.getenv("POSTGRES_HOST", "postgres")
+DB_HOST = os.getenv("POSTGRES_HOST", "localhost")
 DB_PORT = os.getenv("POSTGRES_PORT", "5432")
 DB_NAME = os.getenv("POSTGRES_DB", "kyc_db")
 DB_USER = os.getenv("POSTGRES_USER", "kyc_user")
 DB_PASS = os.getenv("POSTGRES_PASSWORD", "kyc_pass")
 
-CHECKS_FILE = os.getenv("SODA_CHECKS_FILE", "/app/soda_checks.yml")
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+CHECKS_FILE = os.getenv("SODA_CHECKS_FILE", os.path.join(SCRIPT_DIR, "soda_checks.yml"))
 
 
 def wait_for_db(max_retries: int = 30, delay: int = 3) -> psycopg2.extensions.connection:

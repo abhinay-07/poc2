@@ -1,6 +1,6 @@
 # SODA_V3_PHASE1 — KYC Data Quality Monitoring
 
-A Docker-based platform that uses **Soda Core** to validate KYC data stored in **PostgreSQL** and presents results on a live **Streamlit** dashboard.
+A platform that uses **Soda Core** to validate KYC data stored in **PostgreSQL** and presents results on a live **Streamlit** dashboard.
 
 ---
 
@@ -8,39 +8,109 @@ A Docker-based platform that uses **Soda Core** to validate KYC data stored in *
 
 ```
 SODA_V3_PHASE1/
-├── app/                  # Streamlit dashboard
-│   ├── Dockerfile
-│   ├── dashboard.py
-│   └── requirements.txt
-├── data_quality/         # Soda scanner
-│   ├── Dockerfile
-│   ├── scanner.py
-│   ├── soda_checks.yml
-│   └── requirements.txt
-├── database/             # SQL init scripts
-│   ├── schema.sql
-│   └── seed_data.sql
-├── docker-compose.yml
+├── app/
+│   └── dashboard.py          # Streamlit dashboard
+├── data_quality/
+│   ├── scanner.py            # Soda scanner
+│   └── soda_checks.yml       # Soda check definitions
+├── database/
+│   ├── schema.sql            # Database schema
+│   └── seed_data.sql         # Sample test data
+├── requirements.txt          # All Python dependencies
+├── setup.bat                 # One-click database setup (Windows)
+├── run.bat                   # One-click run script (Windows)
 └── README.md
 ```
 
-## Services
+## Prerequisites
 
-| Service              | Description                                    | Port  |
-|----------------------|------------------------------------------------|-------|
-| `postgres`           | PostgreSQL 16 with auto-created schema & seed  | 5432  |
-| `soda_scanner`       | One-shot Soda scan at startup                  | —     |
-| `soda_scheduler`     | Re-runs Soda scan every 6 hours                | —     |
-| `streamlit_dashboard`| Live monitoring UI                             | 8501  |
+| Tool | Version | Check Command |
+|------|---------|---------------|
+| **Python** | 3.11+ | `python --version` |
+| **PostgreSQL** | 15+ | `psql --version` |
+| **Git** | Any | `git --version` |
 
-## Quick Start
+---
 
-```bash
-cd SODA_V3_PHASE1
-docker compose up --build
+## Setup (One-Time)
+
+### Step 1: Clone the repository
+
+```powershell
+git clone https://github.com/abhinay-07/poc2.git
+cd poc2/SODA_V3_PHASE1
+```
+
+### Step 2: Install Python packages
+
+```powershell
+pip install -r requirements.txt
+```
+
+### Step 3: Create the database
+
+**Option A — Run the setup script (Windows):**
+```powershell
+.\setup.bat
+```
+
+**Option B — Manual setup:**
+```powershell
+psql -U postgres
+```
+```sql
+CREATE USER kyc_user WITH PASSWORD 'kyc_pass';
+CREATE DATABASE kyc_db OWNER kyc_user;
+\q
+```
+```powershell
+psql -U kyc_user -d kyc_db -f database/schema.sql
+psql -U kyc_user -d kyc_db -f database/seed_data.sql
+```
+
+> **Note:** If PostgreSQL runs on a different port (e.g., 5433), add `-p 5433` to all `psql` commands.
+
+---
+
+## Running the Project
+
+**Option A — Run script (Windows):**
+```powershell
+.\run.bat
+```
+
+**Option B — Manual:**
+```powershell
+# Terminal 1: Run the Soda data quality scanner
+python data_quality/scanner.py
+
+# Terminal 2: Start the Streamlit dashboard
+streamlit run app/dashboard.py --server.port=8501
 ```
 
 Open the dashboard at **http://localhost:8501**
+
+---
+
+## Configuration (Environment Variables)
+
+All settings have sensible defaults. Override only if your setup differs:
+
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `POSTGRES_HOST` | `localhost` | Database host |
+| `POSTGRES_PORT` | `5432` | Database port |
+| `POSTGRES_DB` | `kyc_db` | Database name |
+| `POSTGRES_USER` | `kyc_user` | Database user |
+| `POSTGRES_PASSWORD` | `kyc_pass` | Database password |
+
+Example (PowerShell):
+```powershell
+$env:POSTGRES_PORT = "5433"
+python data_quality/scanner.py
+```
+
+---
 
 ## Data Quality Checks
 
@@ -72,12 +142,4 @@ The seed data intentionally includes violations for testing:
 
 ## Stopping
 
-```bash
-docker compose down
-```
-
-To also remove the database volume:
-
-```bash
-docker compose down -v
-```
+Press `Ctrl+C` in the terminal running Streamlit to stop the dashboard.
