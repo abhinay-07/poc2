@@ -1,0 +1,61 @@
+# ============================================
+# SODA_V3_PHASE1 - Data Quality Checks
+# ============================================
+
+# ---------------------------
+# USERS Table Checks
+# ---------------------------
+checks for users:
+
+  # user_id must not be null
+  - missing_count(user_id) = 0:
+      name: "user_id must not be null"
+
+  # No duplicate user_id
+  - duplicate_count(user_id) = 0:
+      name: "No duplicate user_id"
+
+  # Age must be >= 18
+  - min(age) >= 18:
+      name: "Age must be >= 18"
+
+  # Valid email format
+  - invalid_count(email) = 0:
+      name: "Valid email format"
+      valid regex: '^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+
+  # Country must be in allowed list
+  - invalid_count(country) = 0:
+      name: "Country in allowed list"
+      valid values: ['India', 'USA', 'UK', 'Germany']
+
+  # Status must be ACTIVE or INACTIVE
+  - invalid_count(status) = 0:
+      name: "Status in allowed list"
+      valid values: ['ACTIVE', 'INACTIVE']
+
+# ---------------------------
+# KYC_DOCUMENTS Table Checks
+# ---------------------------
+checks for kyc_documents:
+
+  # user_id must reference existing user
+  - failed rows:
+      name: "user_id must exist in users"
+      fail query: |
+        SELECT k.*
+        FROM kyc_documents k
+        LEFT JOIN users u ON k.user_id = u.user_id
+        WHERE u.user_id IS NULL
+
+  # All documents should be verified
+  - failed rows:
+      name: "Document must be verified"
+      fail query: |
+        SELECT * FROM kyc_documents WHERE verified = false
+
+  # Expiry date must be in the future
+  - failed rows:
+      name: "Document must not be expired"
+      fail query: |
+        SELECT * FROM kyc_documents WHERE expiry_date < CURRENT_DATE
